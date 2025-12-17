@@ -1,0 +1,14 @@
+spring:
+  profiles:
+    active: local
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    display-request-duration: true
+    doc-expansion: none
+    operations-sorter: alpha
+    tags-sorter: alpha
