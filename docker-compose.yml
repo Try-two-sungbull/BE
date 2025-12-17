@@ -4,6 +4,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: try-two-seongbull_db
+      SPRING_PROFILES_ACTIVE: docker
       TZ: Asia/Seoul
     ports:
       - "3307:3306"
