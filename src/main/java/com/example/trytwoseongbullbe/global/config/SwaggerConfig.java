@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,6 +21,9 @@ public class SwaggerConfig {
                         .title("Try-two Seongbull API")
                         .description("공고문 자동 생성 해커톤 백엔드 API 문서")
                         .version("v1"))
+                .addServersItem(new Server()
+                        .url("https://be.hack.bluerack.org")
+                        .description("Production"))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME_NAME))
                 .components(new Components().addSecuritySchemes(
                         BEARER_SCHEME_NAME,
