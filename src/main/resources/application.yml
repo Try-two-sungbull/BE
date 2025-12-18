@@ -1,7 +1,3 @@
-spring:
-  profiles:
-    active: local
-
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -12,3 +8,7 @@ springdoc:
     doc-expansion: none
     operations-sorter: alpha
     tags-sorter: alpha
+
+public-data:
+  base-url: https://apis.data.go.kr
+  service-key: ${PUBLIC_DATA_SERVICE_KEY}

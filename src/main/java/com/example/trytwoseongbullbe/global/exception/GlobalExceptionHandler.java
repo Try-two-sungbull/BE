@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
         ErrorType type = e.getErrorType();
         return ResponseEntity
                 .status(type.getStatus())
-                .body(ApiResponse.error(type.getCode(), type.getMessage()));
+                .body(ApiResponse.error(type));
     }
 
     @ExceptionHandler(Exception.class)
@@ -30,8 +30,11 @@ public class GlobalExceptionHandler {
             throw e;
         }
 
+        // ✅ 여기 정책은 선택:
+        // - 지금처럼 무조건 400으로 보내고 싶으면 BAD_REQUEST
+        // - 일반적으로는 500이 더 맞음
         return ResponseEntity
-                .badRequest()
-                .body(ApiResponse.error(ErrorType.BAD_REQUEST.getCode(), ErrorType.BAD_REQUEST.getMessage()));
+                .status(ErrorType.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ApiResponse.error(ErrorType.INTERNAL_SERVER_ERROR));
     }
 }
