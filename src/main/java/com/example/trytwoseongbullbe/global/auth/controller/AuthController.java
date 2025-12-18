@@ -4,6 +4,7 @@ import com.example.trytwoseongbullbe.global.auth.dto.request.SignInRequest;
 import com.example.trytwoseongbullbe.global.auth.dto.response.TokenResponse;
 import com.example.trytwoseongbullbe.global.auth.service.AuthService;
 import com.example.trytwoseongbullbe.global.response.ApiResponse;
+import com.example.trytwoseongbullbe.global.response.type.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,6 @@ public class AuthController implements AuthControllerDocs {
     @Override
     @PostMapping("/sign-in")
     public ApiResponse<TokenResponse> signIn(@RequestBody SignInRequest request) {
-        return ApiResponse.success("SUCCESS", "로그인 성공", authService.signIn(request));
+        return ApiResponse.success(ErrorType.AUTH_SIGN_IN_SUCCESS, authService.signIn(request));
     }
 }
