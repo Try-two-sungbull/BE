@@ -14,6 +14,11 @@ public class WebClientConfig {
     private final AgentApiProperties agentApiProperties;
 
     @Bean
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
+    }
+
+    @Bean
     @Qualifier("agentWebClient")
     public WebClient agentWebClient(WebClient.Builder builder) {
         return builder
