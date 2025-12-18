@@ -16,21 +16,33 @@ import org.springframework.stereotype.Component;
 public class JwtTokenProvider {
 
     private final Key key;
-    private final long expirationMs;
+    private final long accessExpirationMs;
+    private final long refreshExpirationMs;
 
     public JwtTokenProvider(
             @Value("${app.jwt.secret:change-me-change-me-change-me-change-me}") String secret,
-            @Value("${app.jwt.expiration-ms:3600000}") long expirationMs // 기본 1시간
+
+            @Value("${app.jwt.access-expiration-ms:${app.jwt.expiration-ms:3600000}}") long accessExpirationMs,
+
+            @Value("${app.jwt.refresh-expiration-ms:604800000}") long refreshExpirationMs
     ) {
         if (secret.length() < 32) {
-            // HS256은 최소 256bit(32바이트) 권장
             throw new IllegalArgumentException("JWT secret must be at least 32 characters for HS256.");
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expirationMs = expirationMs;
+        this.accessExpirationMs = accessExpirationMs;
+        this.refreshExpirationMs = refreshExpirationMs;
     }
 
-    public String generateToken(String username) {
+    public String generateAccessToken(String username) {
+        return generateToken(username, accessExpirationMs);
+    }
+
+    public String generateRefreshToken(String username) {
+        return generateToken(username, refreshExpirationMs);
+    }
+
+    private String generateToken(String username, long expirationMs) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationMs);
 

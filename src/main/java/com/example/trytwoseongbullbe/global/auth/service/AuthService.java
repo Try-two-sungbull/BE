@@ -6,7 +6,6 @@ import static com.example.trytwoseongbullbe.global.response.type.ErrorType.INVAL
 import com.example.trytwoseongbullbe.domain.user.entity.User;
 import com.example.trytwoseongbullbe.domain.user.implement.UserImpl;
 import com.example.trytwoseongbullbe.global.auth.dto.request.SignInRequest;
-import com.example.trytwoseongbullbe.global.auth.dto.response.TokenResponse;
 import com.example.trytwoseongbullbe.global.auth.jwt.JwtTokenProvider;
 import com.example.trytwoseongbullbe.global.config.props.AdminProperties;
 import com.example.trytwoseongbullbe.global.exception.CustomException;
@@ -23,10 +22,9 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AdminProperties adminProperties;
 
-    public TokenResponse signIn(SignInRequest request) {
+    public TokenPair signInAndIssueTokens(SignInRequest request) {
         String adminUsername = adminProperties.getUsername();
 
-        // ✅ admin username만 허용
         if (!adminUsername.equals(request.username())) {
             throw new CustomException(INVALID_CREDENTIALS);
         }
@@ -40,6 +38,12 @@ public class AuthService {
             throw new CustomException(INVALID_CREDENTIALS);
         }
 
-        return new TokenResponse(jwtTokenProvider.generateToken(admin.getUsername()));
+        String accessToken = jwtTokenProvider.generateAccessToken(admin.getUsername());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(admin.getUsername());
+
+        return new TokenPair(accessToken, refreshToken);
+    }
+
+    public record TokenPair(String accessToken, String refreshToken) {
     }
 }
