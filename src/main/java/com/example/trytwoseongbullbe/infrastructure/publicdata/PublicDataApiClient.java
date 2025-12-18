@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class PublicDataApiClient {
 
@@ -107,7 +109,9 @@ public class PublicDataApiClient {
         UriBuilder builder = uriBuilder.path(path)
                 .queryParam("serviceKey", props.serviceKey());
 
-        boolean hasType = queryParams != null && (queryParams.containsKey("type") || queryParams.containsKey("_type"));
+        boolean hasType = queryParams != null &&
+                (queryParams.containsKey("type") || queryParams.containsKey("_type"));
+
         if (!hasType) {
             builder = builder.queryParam("type", "json");
         }
@@ -115,10 +119,9 @@ public class PublicDataApiClient {
         if (queryParams != null) {
             for (Map.Entry<String, ?> entry : queryParams.entrySet()) {
                 Object value = entry.getValue();
-                if (value == null) {
-                    continue;
+                if (value != null) {
+                    builder = builder.queryParam(entry.getKey(), value);
                 }
-                builder = builder.queryParam(entry.getKey(), value);
             }
         }
 
@@ -129,9 +132,8 @@ public class PublicDataApiClient {
         if (s == null) {
             return "";
         }
-        if (s.length() <= MAX_ERROR_BODY_LENGTH) {
-            return s;
-        }
-        return s.substring(0, MAX_ERROR_BODY_LENGTH) + "...(truncated)";
+        return s.length() <= MAX_ERROR_BODY_LENGTH
+                ? s
+                : s.substring(0, MAX_ERROR_BODY_LENGTH) + "...(truncated)";
     }
 }
