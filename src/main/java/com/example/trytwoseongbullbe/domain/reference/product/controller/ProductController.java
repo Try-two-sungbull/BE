@@ -1,10 +1,11 @@
 package com.example.trytwoseongbullbe.domain.reference.product.controller;
 
 import com.example.trytwoseongbullbe.domain.reference.product.dto.request.ProductSearchRequestDto;
-import com.example.trytwoseongbullbe.domain.reference.product.dto.response.ProductItemResponseDto;
+import com.example.trytwoseongbullbe.domain.reference.product.dto.response.ProductSimpleResponseDto;
 import com.example.trytwoseongbullbe.domain.reference.product.service.ProductService;
 import com.example.trytwoseongbullbe.global.response.ApiResponse;
-import java.util.List;
+import com.example.trytwoseongbullbe.global.response.type.ErrorType;
+import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,15 +24,19 @@ public class ProductController implements ProductControllerDocs {
         this.productService = productService;
     }
 
-    /**
-     * 세부품명 목록 조회
-     */
     @Override
     @GetMapping("/products")
-    public ResponseEntity<ApiResponse<List<ProductItemResponseDto>>> search(
-            @ModelAttribute ProductSearchRequestDto req) {
+    public ResponseEntity<ApiResponse<ProductSimpleResponseDto>> search(
+            @ModelAttribute ProductSearchRequestDto req
+    ) {
+        Optional<ProductSimpleResponseDto> data = productService.searchOne(req);
 
-        List<ProductItemResponseDto> items = productService.search(req);
-        return ResponseEntity.ok(ApiResponse.success(items));
+        if (data.isEmpty()) {
+            return ResponseEntity
+                    .status(ErrorType.PRODUCT_NOT_FOUND.getStatus())
+                    .body(ApiResponse.error(ErrorType.PRODUCT_NOT_FOUND));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(data.get()));
     }
 }
