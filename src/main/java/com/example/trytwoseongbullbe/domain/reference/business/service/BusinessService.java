@@ -58,7 +58,12 @@ public class BusinessService {
 
         try {
             return businessApiClient.findFirst(normalized)
-                    .map(it -> new BusinessSimpleResponseDto(it.indstrytyCd(), it.indstrytyNm()));
+                    .map(it -> new BusinessSimpleResponseDto(
+                            it.indstrytyCd(),
+                            it.indstrytyNm(),
+                            it.baseLawordNm(),
+                            it.baseLawordArtclClauseNm()
+                    ));
         } finally {
             log.info("[BusinessService.searchOne] indstrytyCd={}, pageNo={}, numOfRows={}, took={}ms",
                     normalized.indstrytyCd(),
