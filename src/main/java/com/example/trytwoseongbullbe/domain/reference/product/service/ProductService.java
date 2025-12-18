@@ -2,28 +2,34 @@ package com.example.trytwoseongbullbe.domain.reference.product.service;
 
 import com.example.trytwoseongbullbe.domain.reference.product.dto.request.ProductSearchRequestDto;
 import com.example.trytwoseongbullbe.domain.reference.product.dto.response.ProductItemResponseDto;
+import com.example.trytwoseongbullbe.domain.reference.product.dto.response.ProductSimpleResponseDto;
 import com.example.trytwoseongbullbe.domain.reference.product.implement.ProductApiClient;
-import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductApiClient productApiClient;
 
-    public ProductService(ProductApiClient productApiClient) {
-        this.productApiClient = productApiClient;
-    }
-
-    public List<ProductItemResponseDto> search(ProductSearchRequestDto req) {
+    public Optional<ProductSimpleResponseDto> searchOne(ProductSearchRequestDto req) {
+        long start = System.currentTimeMillis();
         ProductSearchRequestDto normalized = normalize(req);
-        return productApiClient.search(normalized);
-    }
 
-    public Optional<ProductItemResponseDto> findFirst(ProductSearchRequestDto req) {
-        ProductSearchRequestDto normalized = normalize(req);
-        return productApiClient.findFirst(normalized);
+        try {
+            Optional<ProductItemResponseDto> first = productApiClient.findFirst(normalized);
+            return first.map(it -> new ProductSimpleResponseDto(it.dtilPrdctClsfcNo(), it.dtilPrdctClsfcNoNm()));
+        } finally {
+            log.info("[ProductService.searchOne] dtilPrdctClsfcNo={}, pageNo={}, numOfRows={}, took={}ms",
+                    normalized.dtilPrdctClsfcNo(),
+                    normalized.pageNoOrDefault(),
+                    normalized.numOfRowsOrDefault(),
+                    System.currentTimeMillis() - start);
+        }
     }
 
     private ProductSearchRequestDto normalize(ProductSearchRequestDto req) {
