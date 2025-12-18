@@ -39,6 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String token = resolveTokenFromCookie(request);
+        System.out.println("JWT token = " + token);
 
         if (token != null && jwtTokenProvider.validate(token)) {
             String username = jwtTokenProvider.getUsername(token);

@@ -24,6 +24,10 @@ app:
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
     expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:3600000}
 
+  cookie:
+    secure: true
+    same-site: None
+
 management:
   endpoints:
     web:

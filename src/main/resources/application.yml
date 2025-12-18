@@ -12,3 +12,7 @@ springdoc:
 public-data:
   base-url: https://apis.data.go.kr
   service-key: ${PUBLIC_DATA_SERVICE_KEY}
+
+agent:
+  api:
+    base-url: https://ai.hack.bluerack.org/api/v1/agent
