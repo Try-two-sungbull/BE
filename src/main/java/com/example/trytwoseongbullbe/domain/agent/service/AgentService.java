@@ -14,4 +14,9 @@ public class AgentService {
     public String classify(MultipartFile file) {
         return agentApiClient.classify(file);
     }
+
+    public String validateTemplate(String templateType, Integer daysAgo) {
+        int safeDaysAgo = (daysAgo == null ? 7 : daysAgo);
+        return agentApiClient.validateTemplate(templateType, safeDaysAgo);
+    }
 }
