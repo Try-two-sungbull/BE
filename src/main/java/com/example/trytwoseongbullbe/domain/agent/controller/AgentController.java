@@ -4,6 +4,8 @@ package com.example.trytwoseongbullbe.domain.agent.controller;
 import com.example.trytwoseongbullbe.domain.agent.service.AgentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,10 +28,32 @@ public class AgentController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<String> classify(@RequestPart("file") MultipartFile file) {
+    @Operation(
+            summary = "문서 분류",
+            description = """
+                    추출 + 분류 단계까지 실행 (디버깅용)
+                    
+                    • 문서 업로드
+                    • Extractor Agent 실행
+                    • Classifier Agent + Rule Engine 실행
+                    • 분류 결과 반환
+                    """
+    )
+    public ResponseEntity<String> classify(
+            @Parameter(
+                    description = "구매계획서 파일",
+                    required = true,
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(type = "string", format = "binary")
+                    )
+            )
+            @RequestPart("file") MultipartFile file
+    ) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("{\"error\":\"empty file\"}");
         }
+
         String json = agentService.classify(file);
         return ResponseEntity.ok(json);
     }
