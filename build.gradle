@@ -24,6 +24,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation("io.netty:netty-resolver-dns-native-macos:4.1.116.Final:osx-aarch_64") // M1/M2/M3
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
