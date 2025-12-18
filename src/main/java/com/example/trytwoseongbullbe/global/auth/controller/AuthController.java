@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,39 +32,55 @@ public class AuthController implements AuthControllerDocs {
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
 
+    // 🔥 여기 중요
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     @Override
     @PostMapping("/sign-in")
-    public ApiResponse<Void> signIn(@RequestBody SignInRequest request, HttpServletResponse response) {
-
+    public ApiResponse<Void> signIn(
+            @RequestBody SignInRequest request,
+            HttpServletResponse response
+    ) {
         AuthService.TokenPair tokens = authService.signInAndIssueTokens(request);
 
         // access: 1시간
-        response.addHeader(HttpHeaders.SET_COOKIE,
-                createCookie(ACCESS, tokens.accessToken(), Duration.ofHours(1)).toString());
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                createCookie(ACCESS, tokens.accessToken(), Duration.ofHours(1)).toString()
+        );
 
         // refresh: 7일
-        response.addHeader(HttpHeaders.SET_COOKIE,
-                createCookie(REFRESH, tokens.refreshToken(), Duration.ofDays(7)).toString());
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                createCookie(REFRESH, tokens.refreshToken(), Duration.ofDays(7)).toString()
+        );
 
         return ApiResponse.success(ErrorType.AUTH_SIGN_IN_SUCCESS, null);
     }
 
     @Override
     @PostMapping("/refresh")
-    public ApiResponse<Void> refresh(HttpServletRequest request, HttpServletResponse response) {
-
+    public ApiResponse<Void> refresh(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
         String refreshToken = getCookieValue(request, REFRESH);
 
         if (refreshToken == null || !jwtTokenProvider.validate(refreshToken)) {
-            // refresh가 유효하지 않으면 401
             throw new CustomException(INVALID_CREDENTIALS);
         }
 
         String username = jwtTokenProvider.getUsername(refreshToken);
         String newAccessToken = jwtTokenProvider.generateAccessToken(username);
 
-        response.addHeader(HttpHeaders.SET_COOKIE,
-                createCookie(ACCESS, newAccessToken, Duration.ofHours(1)).toString());
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                createCookie(ACCESS, newAccessToken, Duration.ofHours(1)).toString()
+        );
 
         return ApiResponse.success(null);
     }
@@ -71,18 +88,16 @@ public class AuthController implements AuthControllerDocs {
     @Override
     @PostMapping("/sign-out")
     public ApiResponse<Void> signOut(HttpServletResponse response) {
-
         response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie(ACCESS).toString());
         response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie(REFRESH).toString());
-
         return ApiResponse.success(null);
     }
 
     private ResponseCookie createCookie(String name, String value, Duration maxAge) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .secure(true)      // 해커톤 OK (https 배포면 더 OK)
-                .sameSite("None")  // cross-site 쿠키 필요할 때
+                .secure(cookieSecure)       // ✅ 환경별
+                .sameSite(cookieSameSite)   // ✅ 환경별
                 .path("/")
                 .maxAge(maxAge)
                 .build();
@@ -91,8 +106,8 @@ public class AuthController implements AuthControllerDocs {
     private ResponseCookie deleteCookie(String name) {
         return ResponseCookie.from(name, "")
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
+                .secure(cookieSecure)
+                .sameSite(cookieSameSite)
                 .path("/")
                 .maxAge(0)
                 .build();
