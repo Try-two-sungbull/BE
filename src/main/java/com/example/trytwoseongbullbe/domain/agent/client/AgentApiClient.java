@@ -1,8 +1,8 @@
 package com.example.trytwoseongbullbe.domain.agent.client;
 
-import com.example.trytwoseongbullbe.domain.agent.config.AgentApiProperties;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -15,9 +15,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RequiredArgsConstructor
 public class AgentApiClient {
 
-    private final WebClient webClient;
-    private final AgentApiProperties props;
+    private final @Qualifier("agentWebClient") WebClient webClient;
 
+    /**
+     * FastAPI: POST /classify (multipart)
+     */
     public String classify(MultipartFile file) {
         try {
             ByteArrayResource fileResource = new ByteArrayResource(file.getBytes()) {
@@ -44,6 +46,9 @@ public class AgentApiClient {
         }
     }
 
+    /**
+     * FastAPI: POST /validate-template?cntrctCnclsMthdNm=...&days_ago=...
+     */
     public String validateTemplate(String templateType, int daysAgo) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
@@ -52,6 +57,27 @@ public class AgentApiClient {
                         .queryParam("days_ago", daysAgo)
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
+
+    /**
+     * FastAPI: POST /upload?template_id=...&format=... Body: UploadDocumentRequest(JSON)
+     */
+    public String upload(String requestJson, long templateId, String format) {
+        return webClient.post()
+                .uri(uriBuilder -> {
+                    var b = uriBuilder.path("/upload")
+                            .queryParam("template_id", templateId);
+                    if (format != null && !format.isBlank()) {
+                        b.queryParam("format", format);
+                    }
+                    return b.build();
+                })
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(requestJson)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();

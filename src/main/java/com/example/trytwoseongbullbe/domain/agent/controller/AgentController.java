@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -88,6 +89,26 @@ public class AgentController {
         }
         String json = agentService.validateTemplate(templateType, daysAgo);
         return ResponseEntity.ok(json);
+    }
+
+    @PostMapping(
+            value = "/upload",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @Operation(summary = "Upload Document", description = "template_id, format을 query로 받고 body로 extracted_data + classification을 받습니다.")
+    public ResponseEntity<String> upload(
+            @RequestParam(name = "template_id") long templateId,
+            @RequestParam(name = "format", defaultValue = "markdown") String format,
+            @RequestBody Object request
+    ) {
+        if (templateId <= 0) {
+            return ResponseEntity.badRequest().body("{\"error\":\"template_id must be positive\"}");
+        }
+        if (request == null) {
+            return ResponseEntity.badRequest().body("{\"error\":\"request body is required\"}");
+        }
+        return ResponseEntity.ok(agentService.upload(request, templateId, format));
     }
 
 }
