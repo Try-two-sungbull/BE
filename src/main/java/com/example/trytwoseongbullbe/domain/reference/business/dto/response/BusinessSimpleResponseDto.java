@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record BusinessSimpleResponseDto(
         @JsonProperty("indstrytyCd") String indstrytyCd,
-        @JsonProperty("indstrytyNm") String indstrytyNm
+        @JsonProperty("indstrytyNm") String indstrytyNm,
+        @JsonProperty("baseLawordNm") String baseLawordNm,
+        @JsonProperty("baseLawordArtclClauseNm") String baseLawordArtclClauseNm
 ) {
 }

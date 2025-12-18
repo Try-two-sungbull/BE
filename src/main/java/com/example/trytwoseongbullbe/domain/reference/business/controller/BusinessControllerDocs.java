@@ -20,7 +20,7 @@ public interface BusinessControllerDocs {
             description = """
                     업종코드(indstrytyCd)로 공공데이터 API에서 업종 정보를 조회합니다.
                     - 프론트 요구사항: data는 배열이 아니라 단일 객체
-                    - 반환 필드: indstrytyCd, indstrytyNm
+                    - 반환 필드: indstrytyCd, indstrytyNm, baseLawordNm, baseLawordArtclClauseNm
                     - 조회 결과 없으면 success=false, data=null
                     """
     )
