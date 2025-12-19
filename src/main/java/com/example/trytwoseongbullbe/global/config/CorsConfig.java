@@ -19,7 +19,8 @@ public class CorsConfig {
                 "https://localhost:8080",
                 "http://localhost:8080",
                 "http://localhost:3000",
-                "https://*.vercel.app"   // ✅ Vercel 배포 도메인 전체 허용
+                "https://*.vercel.app",
+                "https://fee-nine.vercel.app"
 
         ));
 
