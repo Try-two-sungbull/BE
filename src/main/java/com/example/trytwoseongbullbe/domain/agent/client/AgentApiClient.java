@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Component
@@ -22,24 +23,10 @@ public class AgentApiClient {
      */
     public String classify(MultipartFile file) {
         try {
-            ByteArrayResource fileResource = new ByteArrayResource(file.getBytes()) {
-                @Override
-                public String getFilename() {
-                    return file.getOriginalFilename();
-                }
-            };
+            byte[] bytes = file.getBytes();
+            String filename = file.getOriginalFilename();
 
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", fileResource);
-
-            return webClient.post()
-                    .uri("/classify")
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            return classify(bytes, filename);
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to read upload file", e);
@@ -79,6 +66,42 @@ public class AgentApiClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(requestJson)
                 .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
+
+    /**
+     * FastAPI: POST /classify (multipart) - byte[] 버전 NOTE: - bodyValue(Map) 쓰면 multipart encoder 안 타서 boundary 누락될 수
+     * 있음 - fromMultipartData로 보내면 boundary 포함된 정상 multipart로 전송됨
+     */
+    public String classify(byte[] fileBytes, String originalFilename) {
+        String safeFilename = (originalFilename == null || originalFilename.isBlank())
+                ? "upload.bin"
+                : originalFilename;
+
+        ByteArrayResource fileResource = new ByteArrayResource(fileBytes) {
+            @Override
+            public String getFilename() {
+                return safeFilename;
+            }
+        };
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", fileResource);
+
+        return webClient.post()
+                .uri("/classify")
+                // contentType을 굳이 박지 말고 encoder가 boundary 포함해서 잡게 두는게 안전함
+                .accept(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromMultipartData(body))
+                .retrieve()
+                .onStatus(
+                        status -> status.is4xxClientError() || status.is5xxServerError(),
+                        response -> response.bodyToMono(String.class)
+                                .map(msg -> new RuntimeException(
+                                        "FastAPI error [" + response.statusCode() + "]: " + msg
+                                ))
+                )
                 .bodyToMono(String.class)
                 .block();
     }
