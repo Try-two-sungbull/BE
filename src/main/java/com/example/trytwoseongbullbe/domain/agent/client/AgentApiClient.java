@@ -1,10 +1,12 @@
 package com.example.trytwoseongbullbe.domain.agent.client;
 
+import com.example.trytwoseongbullbe.domain.agent.dto.ConvertRequest;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -103,6 +105,35 @@ public class AgentApiClient {
                                 ))
                 )
                 .bodyToMono(String.class)
+                .block();
+    }
+
+    /**
+     * FastAPI: POST /api/v1/convert (json) -> binary file (pdf/docx/hwp) 응답 헤더(Content-Type, Content-Disposition)를 그대로
+     * 받아서 Spring이 프록시로 내려줄 수 있게 ResponseEntity로 반환
+     */
+    public ResponseEntity<byte[]> convert(ConvertRequest request) {
+        return webClient.post()
+                // ✅ convert만 절대경로로 호출 (baseUrl 무시)
+                .uri("https://ai.hack.bluerack.org/api/v1/convert")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(
+                        MediaType.APPLICATION_PDF,
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+                        MediaType.parseMediaType("application/x-hwp"),
+                        MediaType.APPLICATION_OCTET_STREAM
+                )
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(
+                        status -> status.is4xxClientError() || status.is5xxServerError(),
+                        response -> response.bodyToMono(String.class)
+                                .map(msg -> new RuntimeException(
+                                        "FastAPI error [" + response.statusCode() + "]: " + msg
+                                ))
+                )
+                .toEntity(byte[].class)
                 .block();
     }
 }
