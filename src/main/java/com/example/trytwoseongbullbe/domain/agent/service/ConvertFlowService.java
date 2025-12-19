@@ -1,6 +1,7 @@
 package com.example.trytwoseongbullbe.domain.agent.service;
 
 import com.example.trytwoseongbullbe.domain.agent.client.AgentApiClient;
+import com.example.trytwoseongbullbe.domain.agent.dto.ConvertCreateRequest;
 import com.example.trytwoseongbullbe.domain.agent.dto.ConvertRequest;
 import com.example.trytwoseongbullbe.domain.agent.entity.DocumentConvert;
 import com.example.trytwoseongbullbe.domain.agent.repository.DocumentConvertRepository;
@@ -11,27 +12,39 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ConvertService {
+public class ConvertFlowService {
 
+    private final DocumentConvertRepository repository;
     private final AgentApiClient agentApiClient;
-    private final DocumentConvertRepository documentConvertRepository; // ✅ 추가
 
-    public ResponseEntity<byte[]> convert(ConvertRequest request) {
+    @Transactional
+    public Long create(ConvertCreateRequest req) {
+        DocumentConvert saved = repository.save(DocumentConvert.of(req.filename(), req.html()));
+        return saved.getId();
+    }
 
-        // ✅ 여기만 추가됨 (기존 로직 안 건드림)
-        documentConvertRepository.save(
-                DocumentConvert.of(request.filename(), request.html())
+    public ResponseEntity<byte[]> download(Long id, String format) {
+        DocumentConvert doc = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("convert id not found: " + id));
+
+        // DB에서 꺼낸 값으로 FastAPI 요청 JSON 구성
+        ConvertRequest fastReq = new ConvertRequest(
+                doc.getHtml(),
+                format,
+                doc.getFilename()
         );
 
-        // ⬇️⬇️⬇️⬇️⬇️ 기존 코드 그대로 ⬇️⬇️⬇️⬇️⬇️
-        ResponseEntity<byte[]> upstream = agentApiClient.convert(request);
+        // FastAPI 호출
+        ResponseEntity<byte[]> upstream = agentApiClient.convert(fastReq);
         if (upstream == null || upstream.getBody() == null) {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
 
+        // ✅ 헤더 패스스루 (Swagger처럼 다운로드 링크 뜨게)
         HttpHeaders out = new HttpHeaders();
 
         MediaType ct = upstream.getHeaders().getContentType();
@@ -47,8 +60,8 @@ public class ConvertService {
         out.setCacheControl(CacheControl.noStore());
         out.setPragma("no-cache");
 
-        Long len = upstream.getHeaders().getContentLength();
-        if (len != null && len > 0) {
+        long len = upstream.getHeaders().getContentLength();
+        if (len > 0) {
             out.setContentLength(len);
         }
 
