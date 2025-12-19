@@ -18,7 +18,9 @@ public class CorsConfig {
                 "https://be.hack.bluerack.org",
                 "https://localhost:8080",
                 "http://localhost:8080",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "https://*.vercel.app"   // ✅ Vercel 배포 도메인 전체 허용
+
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
