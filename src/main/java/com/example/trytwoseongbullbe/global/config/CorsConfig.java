@@ -20,7 +20,8 @@ public class CorsConfig {
                 "http://localhost:8080",
                 "http://localhost:3000",
                 "https://*.vercel.app",
-                "https://fee-nine.vercel.app"
+                "https://fee-nine.vercel.app",
+                "https://fe-pearl.vercel.app"
 
         ));
 
